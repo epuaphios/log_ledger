@@ -13,10 +13,15 @@ import com.owlike.genson.annotation.JsonProperty;
 
 @DataType()
 public final class LogEntry {
+    @Property()
     private String logId;
+    @Property()
     private String logData;
 
-    public LogEntry(String logId, String logData) {
+
+    public LogEntry(@JsonProperty("logId") final String logId,
+                    @JsonProperty("logData") final String logData)
+   {
         this.logId = logId;
         this.logData = logData;
     }
