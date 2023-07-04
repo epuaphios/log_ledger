@@ -6,7 +6,6 @@
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonParser;
 import io.grpc.Grpc;
 import io.grpc.ManagedChannel;
 import io.grpc.TlsChannelCredentials;
@@ -31,15 +30,18 @@ import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.cert.CertificateException;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public final class App {
 	private static final String MSP_ID = System.getenv().getOrDefault("MSP_ID", "Org1MSP");
 	private static final String CHANNEL_NAME = System.getenv().getOrDefault("CHANNEL_NAME", "channel1");
-	private static final String CHAINCODE_NAME = System.getenv().getOrDefault("CHAINCODE_NAME", "basictest");
+	private static final String CHAINCODE_NAME = System.getenv().getOrDefault("CHAINCODE_NAME", "basicj");
 
 	// Path to crypto materials.
-	private static final Path CRYPTO_PATH = Paths.get("../../fabric-samples/test-network/organizations/peerOrganizations/org1.example.com");
+	private static final Path CRYPTO_PATH = Paths.get("../../../fabric-samples/test-network/organizations/peerOrganizations/org1.example.com");
 	// Path to user certificate.
 	private static final Path CERT_PATH = CRYPTO_PATH.resolve(Paths.get("users/User1@org1.example.com/msp/signcerts/User1@org1.example.com-cert.pem"));
 	// Path to user private key directory.
@@ -122,11 +124,26 @@ public final class App {
 	private void storeLog() throws EndorseException, SubmitException, CommitStatusException, CommitException {
 
 		System.out.println("aaa");
-		String logId = "uniqueLogId";
-		String logData = "Log data to be stored";
 
-        try {
-			contract.submitTransaction("storeLog", logId, logData);
+
+		Map<String, String> hashMap = new HashMap<>();
+		Random random = new Random();
+
+
+		for (int i = 0; i < 100; i++) {
+			String logId = "Key" + i;
+			String logData = generateRandomValue();
+			hashMap.put("Key" + logId, logData);
+		}
+
+		try {
+		for (Map.Entry<String, String> entry : hashMap.entrySet()) {
+			contract.newProposal("storeLog")
+					.addArguments(entry.getKey(), entry.getValue())
+					.build()
+					.endorse()
+					.submitAsync();
+		}
 		}
 		catch (EndorseException e) {
 			System.out.println("Endorsement hatası: " + e.getMessage());
@@ -135,5 +152,20 @@ public final class App {
 		System.out.println("*** Transaction committed successfully");
 
 //		System.out.println("*** Result:" + evaluateResult);
+	}
+
+	private static String generateRandomValue() {
+		// Rastgele değer üretmek için burada istediğiniz algoritmayı kullanabilirsiniz.
+		// Örneğin, rastgele bir sayı veya rastgele bir dizi veya metin oluşturabilirsiniz.
+		// Bu örnekte, 6 karakterlik rastgele bir dize döndürülüyor.
+		String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+		StringBuilder sb = new StringBuilder(6);
+		Random random = new Random();
+		for (int i = 0; i < 6; i++) {
+			int index = random.nextInt(characters.length());
+			char randomChar = characters.charAt(index);
+			sb.append(randomChar);
+		}
+		return sb.toString();
 	}
 }
